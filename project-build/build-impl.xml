@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project name="build-test" default="default" basedir="..">
+
+
+    <!-- PROPERTY -->
+    <!-- <property name="basedir" value="${default.dir}"/> -->
+    <property name="build.dir" value="${basedir}/build"/>
+    <property name="dist.dir" value="${basedir}/dist"/>
+    <property name="dest.classes.dir" value="${build.dir}/WEB-INF/classes"/>
+    <property name="src.java.dir" value="${basedir}/src/mg/ITU"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="config.dir" value="${src.java.dir}/config"/>
+    <property name="war.name" value="boulangerie.war"/>
+
+    <!-- <property name="tomcat.dir" value="C:/WILDFLY/wildfly-10.0.0/standalone/deployments"/> -->
+    <property name="serveurAPP.dir" value="C:/WILDFLY/wildfly-33.0.1.Final"/>
+
+    <path id="classpath" >
+        <fileset dir="${lib.dir}" >
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+    
+    <tstamp>
+        <format property="date_duJour" pattern="dd/MM/yyyy hh:mm:ss aa" />
+    </tstamp>
+    <!-- PROPERTY DONE -->
+
+    
+    
+
+    <target name="[init]">
+        <echo> ------ Initialize - ${date_duJour} ------ </echo>
+        <echo> JDK-VERSION: ${ant.java.version} - ANT-VERSION: ${ant.version} </echo>
+    </target>
+
+    <target name="clean" depends="[init]">
+        <echo> ------ [Clean Start] ------ </echo>
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" />
+        <echo> ------ [Clean Done] ------ </echo>
+    </target>
+    
+    <import file="build-web-default.xml" />
+    <target name="build" depends="init-web">
+        <echo> ------ [Create dir Start] ------ </echo>
+        <mkdir dir="${build.dir}" /> <!-- CONTENANT LE DOSSIER WEB DEJA COMPILER -->
+        <mkdir dir="${dist.dir}" /> <!-- CONTENANT LE FICHIER.WAR -->
+
+        <copy todir="${build.dir}">
+            <fileset dir="${basedir}/web" />
+        </copy>
+        <copy todir="${build.dir}/WEB-INF/lib">
+            <fileset dir="${lib.dir}" />
+        </copy>
+
+
+        <mkdir dir="${build.dir}/WEB-INF/lib" />
+        <mkdir dir="${dest.classes.dir}" />
+
+
+        <echo> ------ [Create dir Done] ------ </echo>
+    </target>
+    
+    <target name="compile" depends="build" >
+        <echo> ------ [Compilation Start] ------ </echo>
+        <javac srcdir="${src.java.dir}" destdir="${dest.classes.dir}" nowarn="true" debug="true" debuglevel="lines,vars,source" description="off" classpathref="classpath" includeantruntime="false" encoding="iso-8859-1">
+            <compilerarg value="-Xdoclint:none" />
+        </javac>
+        <echo> ------ [Compilation Done] ------ </echo>
+    </target>
+
+    <target name="war" depends="compile">
+        <war destfile="${dist.dir}/${war.name}" webxml="${web.xml}">
+            <fileset dir="${build.dir}"/>
+        </war>
+    </target>
+
+    <target name="deploy" depends="war">
+        <copy file="${dist.dir}/${war.name}" todir="${serveurAPP.dir}/standalone/deployments"/>
+    </target>        
+
+
+    <target name="[default]" depends="deploy">
+        <echo> ------ Done - ${date_duJour} ------ </echo>
+    </target>
+
+
+</project>
